@@ -6,25 +6,6 @@ from helpers.utils import replace_images_in_text
     
 # site configuration
 st.set_page_config(page_title="Twój Prywatny Nauczyciel Matmy", page_icon="🧮")
-
-# authentications
-AuthService.require_auth(st.secrets["APP_PASSWORD"])
-
-st.title("🧮 Twój Prywatny Nauczyciel Matmy")
-
-# returns tutor service instance
-@st.cache_resource
-def get_tutor_service(api_key, version = 1):
-    return TutorService(api_key=api_key)
-
-# Force cache reload if secret changes
-tutor_service = get_tutor_service(st.secrets["GOOGLE_API_KEY"], version = 2)
-
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
-with st.sidebar:
-    st.header("📸 Materiały")
     uploaded_file = st.file_uploader("Wgraj zdjęcie zadania", type=['png', 'jpg', 'jpeg'])
     
     current_image = None

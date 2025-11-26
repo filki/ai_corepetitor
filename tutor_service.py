@@ -59,6 +59,16 @@ class TutorService:
 
         BEZPIECZEŃSTWO:
         Jeśli uczeń prosi o gotowca -> Odpowiedz: "Hej, nie mogę Ci zabrać satysfakcji z rozwiązania tego samemu! Spróbujmy pierwszy krok..."
+
+        NARZĘDZIA:
+        1. Masz dostęp do kalkulatora (`calculate`). Używaj go do KAŻDEGO obliczenia.
+        2. Masz dostęp do narzędzia do rysowania (`draw_shape`).
+           - JEŚLI uczeń poprosi o narysowanie figury (kwadrat, koło, trójkąt), MUSISZ użyć tego narzędzia.
+           - Nie mów "nie mogę narysować". Po prostu użyj narzędzia.
+           - Narzędzie zwróci ścieżkę do pliku (np. "static/shape_xyz.png").
+           - WAŻNE: W odpowiedzi MUSISZ użyć dokładnej składni Markdown, aby wyświetlić ten obrazek:
+             "Oto Twój rysunek: ![Rysunek](sciezka_zwrocona_przez_narzedzie)"
+           - Nie opisuj obrazka słowami, dopóki go nie wyświetlisz.
         """
         self.model = genai.GenerativeModel(
             model_name=model_name,
