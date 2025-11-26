@@ -3,7 +3,7 @@ import streamlit as st
 from google.api_core.exceptions import GoogleAPICallError, ResourceExhausted
 import time
 from tools.calculator import calculate
-from tools.geometry import geometry
+from tools.geometry import draw_shape
 MAX_RETRIES = 3
 def retry_with_backoff(func):
     def wrapper(*args, **kwargs):
