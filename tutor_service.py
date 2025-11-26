@@ -7,30 +7,32 @@ MAX_RETRIES = 3
 def retry_with_backoff(func):
     def wrapper(*args, **kwargs):
         attempt = 0
+        last_exception = None
         while attempt < MAX_RETRIES:
             try:
                 return func(*args, **kwargs)
-            except GoogleAPICallError as e:
+            except (GoogleAPICallError, ResourceExhausted, Exception) as e:
+                last_exception = e
                 delay = 2 ** attempt
-                print(f"Coś mi się pomieszało w obliczeniach. Spróbuję jeszcze raz za {delay} s...")
-                time.sleep(delay)
-                attempt += 1
-            except ResourceExhausted as e:
-                delay = 2 ** attempt
-                print(f"Muszę chwilę odpocząć, bo aż mi się procesor zagrzał! 🌡️ Wracam za {delay} s...")
-                time.sleep(delay)
-                attempt += 1
-            except Exception as e:
-                delay = 2 ** attempt
+                
+                # Debug logging
                 if st.session_state.get("debug_mode"):
-                    st.error(f"DEBUG: Błąd w próbie {attempt+1}: {e}")
-                print(f"Ups, mała awaria! Naprawiam i wracam za {delay} s...")
+                    st.error(f"DEBUG (Próba {attempt+1}/{MAX_RETRIES}): {type(e).__name__}: {e}")
+                
+                # User-friendly messages
+                if isinstance(e, ResourceExhausted):
+                    print(f"Muszę chwilę odpocząć, bo aż mi się procesor zagrzał! 🌡️ Wracam za {delay} s...")
+                elif isinstance(e, GoogleAPICallError):
+                    print(f"Coś mi się pomieszało w obliczeniach. Spróbuję jeszcze raz za {delay} s...")
+                else:
+                    print(f"Ups, mała awaria! Naprawiam i wracam za {delay} s...")
+                
                 time.sleep(delay)
                 attempt += 1
         
         final_error = "Uff, ale dużo liczenia! Muszę wziąć głęboki oddech. Spróbuj za moment ⏳"
-        if st.session_state.get("debug_mode"):
-            final_error += f" (Ostatni błąd: {e})"
+        if st.session_state.get("debug_mode") and last_exception:
+            final_error += f" (Ostatni błąd: {type(last_exception).__name__}: {last_exception})"
         raise Exception(final_error)
     return wrapper
 
