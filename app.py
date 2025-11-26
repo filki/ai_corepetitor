@@ -52,9 +52,12 @@ if prompt := st.chat_input("Z czym masz problem?"):
             response = tutor_service.send_message(chat_session, message_parts)
             
             for chunk in response:
-                if chunk.text:
-                    full_response += chunk.text
-                    message_placeholder.markdown(full_response + "▌")
+                try:
+                    if chunk.text:
+                        full_response += chunk.text
+                        message_placeholder.markdown(full_response + "▌")
+                except:
+                    pass                
             
             message_placeholder.markdown(full_response)
             
