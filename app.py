@@ -14,11 +14,11 @@ st.title("🧮 Twój Prywatny Nauczyciel Matmy")
 
 # returns tutor service instance
 @st.cache_resource
-def get_tutor_service(api_key):
+def get_tutor_service(api_key, version = 1):
     return TutorService(api_key=api_key)
 
 # Force cache reload if secret changes
-tutor_service = get_tutor_service(st.secrets["GOOGLE_API_KEY"])
+tutor_service = get_tutor_service(st.secrets["GOOGLE_API_KEY"], version = 2)
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
