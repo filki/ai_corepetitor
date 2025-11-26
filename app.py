@@ -1,71 +1,51 @@
 import streamlit as st
-from helpers.photo_converter import process_image
 from services.auth_service import AuthService
-from services.tutor_service import TutorService
-from helpers.utils import replace_images_in_text
-    
-# site configuration
-st.set_page_config(page_title="Twój Prywatny Nauczyciel Matmy", page_icon="🧮")
+from services.challenge_service import ChallengeService
+from services.db_service import DbService
 
-# authentications
+# Site configuration (MUSI być pierwsza linijka!)
+st.set_page_config(page_title="Generator Zadań", page_icon="🧮")
+
+# Authentication (zaraz po page_config!)
 AuthService.require_auth(st.secrets["APP_PASSWORD"])
 
-st.title("🧮 Twój Prywatny Nauczyciel Matmy")
-
-# returns tutor service instance
+# Cached service instances
 @st.cache_resource
-def get_tutor_service(api_key, version = 1):
-    return TutorService(api_key=api_key)
+def get_challenge_service(api_key):  
+    return ChallengeService(api_key)
 
-# Force cache reload if secret changes
-tutor_service = get_tutor_service(st.secrets["GOOGLE_API_KEY"], version = 2)
+@st.cache_resource
+def get_db_service():
+    return DbService()
 
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+challenge_service = get_challenge_service(st.secrets["GOOGLE_API_KEY"])
+db_service = get_db_service()
 
-with st.sidebar:
-    st.header("📸 Materiały")
-    uploaded_file = st.file_uploader("Wgraj zdjęcie zadania", type=['png', 'jpg', 'jpeg'])
+if "current_profile" not in st.session_state:
+   
     
-    current_image = None
-    if uploaded_file:
-        current_image = process_image(uploaded_file)
-        st.image(current_image, caption="Podgląd", use_column_width=True)
-
-    st.divider()
-    debug_mode = st.checkbox("🐞 Tryb Developerski", key="debug_mode")
-
-for msg in st.session_state.messages:
-    with st.chat_message(msg["role"]):
-        st.markdown(replace_images_in_text(msg["content"]))
-
-if prompt := st.chat_input("Z czym masz problem?"):
-
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
-
-    with st.chat_message("assistant"):
-        message_placeholder = st.empty()
-        full_response = ""
-        
-        try:
-
-            chat_session = tutor_service.get_chat_session(st.session_state.messages[:-1]) 
-            
+    st.header("👤 Kto dzisiaj się uczy?")
     
-            message_parts = [prompt]
-            if current_image:
-                message_parts.append(current_image)
-            response = tutor_service.send_message(chat_session, message_parts)
-            
-            # Streaming is disabled due to function calling support
-            if response.text:
-                full_response = response.text
-                message_placeholder.markdown(replace_images_in_text(full_response))
-            
-            # Zapisz odpowiedź
-            st.session_state.messages.append({"role": "assistant", "content": full_response})
-            
-        except Exception as e:
-            st.error(f"Wystąpił błąd: {e}")
+    profiles = db_service.get_all_profiles().data
+    cols = st.columns(len(profiles) + 1)
+    
+    for i, profile in enumerate(profiles):
+        with cols[i]:
+            st.subheader(profile["nickname"]) 
+            st.metric("XP", profile["total_xp"])
+            if st.button("Wybierz", key=f"select_{profile['id']}"):
+                st.session_state["current_profile"] = profile
+                st.rerun()
+    
+    with cols[-1]:
+        st.subheader("➕ Nowy")
+        with st.form("add_profile"):
+            nick = st.text_input("Imię")
+            level = st.selectbox("Poziom", ["podstawowka_1_3", "podstawowka_4_8"])
+            if st.form_submit_button("Dodaj"):
+                db_service.create_profile(nick, level)
+                st.rerun()
+    st.stop()  
+st.title("🧮 Generator Zadań")
+st.write(f"Witaj, {st.session_state['current_profile']['nickname']}!")
+
