@@ -28,3 +28,5 @@ class DbService:
         else:
             raise ValueError(f"Profile with id {profile_id} not found")
         return self.supabase.table("profiles").select("*").eq("id", profile_id).execute()
+    def get_submissions(self, profile_id):
+        return self.supabase.table("submissions").select("*").eq("profile_id", profile_id).execute()
