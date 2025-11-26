@@ -3,11 +3,11 @@ from photo_converter import process_image
 from auth_service import AuthService
 from tutor_service import TutorService
 # site configuration
-st.set_page_config(page_title="Twój Korepetytor Matmy", page_icon="🧮")
+st.set_page_config(page_title="Twój Prywatny Nauczyciel Matmy", page_icon="🧮")
 # authentications
 AuthService.require_auth(st.secrets["APP_PASSWORD"])
 
-st.title("🧮 Gemini Math Tutor")
+st.title("🧮 Twój Prywatny Nauczyciel Matmy")
 
 
 @st.cache_resource
@@ -49,8 +49,7 @@ if prompt := st.chat_input("Z czym masz problem?"):
             message_parts = [prompt]
             if current_image:
                 message_parts.append(current_image)
-            
-            response = chat_session.send_message(message_parts, stream=True)
+            response = tutor_service.send_message(chat_session, message_parts)
             
             for chunk in response:
                 if chunk.text:

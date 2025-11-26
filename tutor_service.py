@@ -1,5 +1,33 @@
 import google.generativeai as genai
 import streamlit as st
+from google.api_core.exceptions import GoogleAPICallError, ResourceExhausted
+import time
+MAX_RETRIES = 3
+def retry_with_backoff(func):
+    def wrapper(*args, **kwargs):
+        attempt = 0
+        while attempt < MAX_RETRIES:
+            try:
+                return func(*args, **kwargs)
+            except GoogleAPICallError as e:
+                delay = 2 ** attempt
+                print(f"Coś mi się pomieszało w obliczeniach. Spróbuję jeszcze raz za {delay} s...")
+                time.sleep(delay)
+                attempt += 1
+            except ResourceExhausted as e:
+                delay = 2 ** attempt
+                print(f"Muszę chwilę odpocząć, bo aż mi się procesor zagrzał! 🌡️ Wracam za {delay} s...")
+                time.sleep(delay)
+                attempt += 1
+            except Exception as e:
+                print(f"Ups, mała awaria! Naprawiam i wracam za {delay} s...")
+                time.sleep(delay)
+                attempt += 1
+        raise Exception("Uff, ale dużo liczenia! Muszę wziąć głęboki oddech. Spróbuj za moment ⏳")
+    return wrapper
+
+
+
 class TutorService:
     def __init__(self, api_key: str, model_name: str = "gemini-2.5-flash"):
         genai.configure(api_key=api_key)
@@ -24,3 +52,6 @@ class TutorService:
             gemini_history.append({"role": role, "parts": [msg["content"]]})
         
         return self.model.start_chat(history=gemini_history)
+    @retry_with_backoff
+    def send_message(self, chat_session, parts):
+        return chat_session.send_message(parts, stream = True)
