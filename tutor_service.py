@@ -71,3 +71,11 @@ class TutorService:
         for msg in st_messages:
             role = "user" if msg["role"] == "user" else "model"
             # Gemini oczekuje listy 'parts', nawet dla samego tekstu
+            gemini_history.append({"role": role, "parts": [msg["content"]]})
+        
+        return self.model.start_chat(history=gemini_history, enable_automatic_function_calling=True)
+    
+    @retry_with_backoff
+    def send_message(self, chat_session, parts):
+        # stream=True is not supported with enable_automatic_function_calling=True
+        return chat_session.send_message(parts, stream=False)
