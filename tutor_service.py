@@ -22,10 +22,16 @@ def retry_with_backoff(func):
                 attempt += 1
             except Exception as e:
                 delay = 2 ** attempt
+                if st.session_state.get("debug_mode"):
+                    st.error(f"DEBUG: Błąd w próbie {attempt+1}: {e}")
                 print(f"Ups, mała awaria! Naprawiam i wracam za {delay} s...")
                 time.sleep(delay)
                 attempt += 1
-        raise Exception("Uff, ale dużo liczenia! Muszę wziąć głęboki oddech. Spróbuj za moment ⏳")
+        
+        final_error = "Uff, ale dużo liczenia! Muszę wziąć głęboki oddech. Spróbuj za moment ⏳"
+        if st.session_state.get("debug_mode"):
+            final_error += f" (Ostatni błąd: {e})"
+        raise Exception(final_error)
     return wrapper
 
 

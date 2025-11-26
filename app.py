@@ -19,19 +19,6 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 
 with st.sidebar:
-    st.header("📸 Materiały")
-    uploaded_file = st.file_uploader("Wgraj zdjęcie zadania", type=['png', 'jpg', 'jpeg'])
-    
-    current_image = None
-    if uploaded_file:
-        current_image = process_image(uploaded_file)
-        st.image(current_image, caption="Podgląd", use_column_width=True)
-
-for msg in st.session_state.messages:
-    with st.chat_message(msg["role"]):
-        st.markdown(msg["content"])
-
-if prompt := st.chat_input("Z czym masz problem?"):
 
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
