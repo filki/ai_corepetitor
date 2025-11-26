@@ -1,11 +1,12 @@
 import google.generativeai as genai
-import json 
+import json
+
 
 class GeneratorService:
     def __init__(self, api_key):
         genai.configure(api_key=api_key)
         self.model = genai.GenerativeModel(
-            model_name='gemini-2.5-flash',
+            model_name="gemini-2.5-flash",
             system_instruction="""
             Jesteś drugim agentem w szeregu orkiestracji. 
             Twoim zadaniem jest wygenerowanie zadania na podstawie kontekstu.
@@ -27,11 +28,11 @@ class GeneratorService:
                 "hints": ["?"],
                 "difficulty": "?"
             }
-            """
+            """,
         )
-    
-    def generate_challenge(self, context: dict, category: str) -> dict:  
-       try:
+
+    def generate_challenge(self, context: dict, category: str) -> dict:
+        try:
             prompt = f"""
             Wygeneruj zadanie matematyczne.
             
@@ -43,8 +44,8 @@ class GeneratorService:
             Uwzględnij poziom ucznia i wygeneruj odpowiednie zadanie.
             Zwróć odpowiedź w formacie JSON zgodnie z przykładem w instrukcji.
             """
-            
-            response = self.model.generate_content(prompt) 
+
+            response = self.model.generate_content(prompt)
             if response.text.startswith("```json"):
                 return self._handle_markdown(response.text)
             else:
@@ -52,7 +53,7 @@ class GeneratorService:
         except Exception as e:
             print(f"Error handling JSON response: {e}")
             return None
-    
+
     def _handle_markdown(self, response: str) -> dict:
         response = response.replace("```json", "").replace("```", "").strip()
         try:
