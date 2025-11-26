@@ -2,22 +2,10 @@ import streamlit as st
 from photo_converter import process_image
 from auth_service import AuthService
 from tutor_service import TutorService
+
 # site configuration
 st.set_page_config(page_title="Twój Prywatny Nauczyciel Matmy", page_icon="🧮")
-# authentications
-AuthService.require_auth(st.secrets["APP_PASSWORD"])
 
-st.title("🧮 Twój Prywatny Nauczyciel Matmy")
-
-# returns tutor service instance
-@st.cache_resource
-def get_tutor_service():
-import streamlit as st
-from photo_converter import process_image
-from auth_service import AuthService
-from tutor_service import TutorService
-# site configuration
-st.set_page_config(page_title="Twój Prywatny Nauczyciel Matmy", page_icon="🧮")
 # authentications
 AuthService.require_auth(st.secrets["APP_PASSWORD"])
 
@@ -32,6 +20,7 @@ tutor_service = get_tutor_service()
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+with st.sidebar:
     st.header("📸 Materiały")
     uploaded_file = st.file_uploader("Wgraj zdjęcie zadania", type=['png', 'jpg', 'jpeg'])
     
