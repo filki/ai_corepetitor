@@ -21,6 +21,7 @@ def retry_with_backoff(func):
                 time.sleep(delay)
                 attempt += 1
             except Exception as e:
+                delay = 2 ** attempt
                 print(f"Ups, mała awaria! Naprawiam i wracam za {delay} s...")
                 time.sleep(delay)
                 attempt += 1
