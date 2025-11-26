@@ -2,7 +2,8 @@ import streamlit as st
 from photo_converter import process_image
 from auth_service import AuthService
 from tutor_service import TutorService
-
+from helpers.utils import replace_images_in_text
+    
 # site configuration
 st.set_page_config(page_title="Twój Prywatny Nauczyciel Matmy", page_icon="🧮")
 
@@ -36,7 +37,7 @@ with st.sidebar:
 
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
-        st.markdown(msg["content"])
+        st.markdown(replace_images_in_text(msg["content"]))
 
 if prompt := st.chat_input("Z czym masz problem?"):
 
@@ -61,7 +62,7 @@ if prompt := st.chat_input("Z czym masz problem?"):
             # Streaming is disabled due to function calling support
             if response.text:
                 full_response = response.text
-                message_placeholder.markdown(full_response)
+                message_placeholder.markdown(replace_images_in_text(full_response))
             
             # Zapisz odpowiedź
             st.session_state.messages.append({"role": "assistant", "content": full_response})
