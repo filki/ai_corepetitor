@@ -52,6 +52,7 @@ class TutorService:
             gemini_history.append({"role": role, "parts": [msg["content"]]})
         
         return self.model.start_chat(history=gemini_history)
+    
     @retry_with_backoff
     def send_message(self, chat_session, parts):
         return chat_session.send_message(parts, stream = True)

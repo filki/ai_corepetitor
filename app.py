@@ -9,7 +9,7 @@ AuthService.require_auth(st.secrets["APP_PASSWORD"])
 
 st.title("🧮 Twój Prywatny Nauczyciel Matmy")
 
-
+# returns tutor service instance
 @st.cache_resource
 def get_tutor_service():
     return TutorService(api_key=st.secrets["GOOGLE_API_KEY"])
