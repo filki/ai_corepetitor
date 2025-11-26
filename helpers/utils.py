@@ -1,3 +1,6 @@
+import base64
+import re
+import os
 def replace_images_in_text(text: str) -> str:
     """
     Replaces local image paths (e.g. ![Alt](static/image.png)) with Base64 data URLs.
