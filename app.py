@@ -1,7 +1,7 @@
 import streamlit as st
-from photo_converter import process_image
-from auth_service import AuthService
-from tutor_service import TutorService
+from helpers.photo_converter import process_image
+from services.auth_service import AuthService
+from services.tutor_service import TutorService
 from helpers.utils import replace_images_in_text
     
 # site configuration
