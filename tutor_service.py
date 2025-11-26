@@ -3,6 +3,7 @@ import streamlit as st
 from google.api_core.exceptions import GoogleAPICallError, ResourceExhausted
 import time
 from tools.calculator import calculate
+from tools.geometry import geometry
 MAX_RETRIES = 3
 def retry_with_backoff(func):
     def wrapper(*args, **kwargs):
@@ -62,7 +63,7 @@ class TutorService:
         self.model = genai.GenerativeModel(
             model_name=model_name,
             system_instruction=self.system_instruction,
-            tools=[calculate] 
+            tools=[calculate, geometry] 
         )
     def get_chat_session(self, st_messages):
         """Przygotowuje historię w formacie Gemini i zwraca sesję czatu."""
