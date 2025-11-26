@@ -1,7 +1,9 @@
 import streamlit as st
 import google.generativeai as genai
-
+from photo_converter import process_image 
 # 1. Konfiguracja Strony
+
+
 st.set_page_config(page_title="Twój Korepetytor Matmy", page_icon="🧮")
 st.title("🧮 Gemini Math Tutor")
 
@@ -48,6 +50,16 @@ for msg in st.session_state.messages:
     role = "user" if msg["role"] == "user" else "model"
     gemini_history.append({"role": role, "parts": [msg["content"]]})
 
+
+# --- SIDEBAR: Obsługa Zdjęć ---
+with st.sidebar:
+    st.header("📸 Materiały")
+    uploaded_file = st.file_uploader("Wgraj zdjęcie zadania", type=['png', 'jpg', 'jpeg'])
+    
+    current_image = None
+    if uploaded_file:
+        current_image = process_image(uploaded_file)
+        st.image(current_image, caption="Podgląd", use_column_width=True)
 # 5. Inicjalizacja czatu z historią
 chat_session = model.start_chat(history=gemini_history)
 
@@ -58,19 +70,24 @@ for msg in st.session_state.messages:
 
 # 6. Obsługa wejścia
 if prompt := st.chat_input("Z czym masz problem?"):
-    # Wyświetl i zapisz wiadomość użytkownika
+    # Dodajemy wiadomość użytkownika do historii UI
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
-
     # Generowanie odpowiedzi
-    with st.chat_message("assistant"): # W UI używamy ikony "assistant"
+    with st.chat_message("assistant"):
         message_placeholder = st.empty()
         full_response = ""
         
         try:
+            # Przygotowanie treści wiadomości
+            # Jeśli mamy zdjęcie, wysyłamy je razem z pytaniem
+            message_parts = [prompt]
+            if current_image:
+                message_parts.append(current_image)
+            
             # Streamowanie odpowiedzi z Gemini
-            response = chat_session.send_message(prompt, stream=True)
+            response = chat_session.send_message(message_parts, stream=True)
             
             for chunk in response:
                 if chunk.text:
