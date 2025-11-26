@@ -67,4 +67,4 @@ def draw_shape(shape_type: str, side: float = 0, width: float = 0, height: float
     plt.savefig(filepath)
     plt.close()
     
-    return f"Image saved to {filepath}"
+    return filepath
