@@ -63,7 +63,7 @@ class TutorService:
         self.model = genai.GenerativeModel(
             model_name=model_name,
             system_instruction=self.system_instruction,
-            tools=[calculate, geometry] 
+            tools=[calculate, draw_shape] 
         )
     def get_chat_session(self, st_messages):
         """Przygotowuje historię w formacie Gemini i zwraca sesję czatu."""
@@ -131,6 +131,13 @@ class TutorService:
 
         BEZPIECZEŃSTWO:
         Jeśli uczeń prosi o gotowca -> Odpowiedz: "Hej, nie mogę Ci zabrać satysfakcji z rozwiązania tego samemu! Spróbujmy pierwszy krok..."
+
+        NARZĘDZIA:
+        1. Masz dostęp do kalkulatora (`calculate`). Używaj go do KAŻDEGO obliczenia.
+        2. Masz dostęp do narzędzia do rysowania (`draw_shape`).
+           - JEŚLI uczeń poprosi o narysowanie figury (kwadrat, koło, trójkąt), MUSISZ użyć tego narzędzia.
+           - Nie mów "nie mogę narysować". Po prostu użyj narzędzia.
+           - Narzędzie zwróci ścieżkę do pliku. W odpowiedzi napisz: "Oto Twój rysunek: ![Rysunek](sciezka_zwrocona_przez_narzedzie)".
         """
         self.model = genai.GenerativeModel(
             model_name=model_name,
