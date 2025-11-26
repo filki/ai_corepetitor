@@ -32,23 +32,23 @@ class GeneratorService:
     
     def generate_challenge(self, context: dict, category: str) -> dict:  
        try:
-        prompt = f"""
-        Wygeneruj zadanie matematyczne.
-        
-        Kontekst ucznia:
-        {json.dumps(context, indent=2)}
-        
-        Kategoria: {category}
-        
-        Uwzględnij poziom ucznia i wygeneruj odpowiednie zadanie.
-        Zwróć odpowiedź w formacie JSON zgodnie z przykładem w instrukcji.
-        """
-        
-        response = self.model.generate_content(prompt) 
-        if response.text.startswith("```json"):
-            return self._handle_markdown(response.text)
-        else:
-            return json.loads(response.text.strip())
+            prompt = f"""
+            Wygeneruj zadanie matematyczne.
+            
+            Kontekst ucznia:
+            {json.dumps(context, indent=2)}
+            
+            Kategoria: {category}
+            
+            Uwzględnij poziom ucznia i wygeneruj odpowiednie zadanie.
+            Zwróć odpowiedź w formacie JSON zgodnie z przykładem w instrukcji.
+            """
+            
+            response = self.model.generate_content(prompt) 
+            if response.text.startswith("```json"):
+                return self._handle_markdown(response.text)
+            else:
+                return json.loads(response.text.strip())
         except Exception as e:
             print(f"Error handling JSON response: {e}")
             return None
