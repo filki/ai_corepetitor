@@ -64,39 +64,6 @@ with st.sidebar:
         del st.session_state["current_profile"]
         st.rerun()
 
-# --- Chat Interface ---
-st.subheader("💬 Wirtualny Nauczyciel")
-
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
-for msg in st.session_state.messages:
-    with st.chat_message(msg["role"]):
-        st.markdown(msg["content"])
-
-if prompt := st.chat_input("O co chcesz zapytać?"):
-    # Add user message to state
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
-
-    # Generate response
-    with st.chat_message("assistant"):
-        with st.spinner("Myślę..."):
-            try:
-                # Prepare history (excluding the last user message which we send now)
-                chat_session = tutor_service.get_chat_session(
-                    st.session_state.messages[:-1]
-                )
-                response = tutor_service.send_message(chat_session, prompt)
-
-                st.markdown(response.text)
-                st.session_state.messages.append(
-                    {"role": "assistant", "content": response.text}
-                )
-            except Exception as e:
-                st.error(f"Błąd: {e}")
-
 # --- Challenge Generator ---
 st.divider()
 st.header("🎯 Tryb Treningowy")
@@ -149,3 +116,36 @@ if "submission_result" in st.session_state:
         st.balloons()
     else:
         st.error(f"{result['feedback']}")
+
+# --- Chat Interface ---
+st.subheader("💬 Wirtualny Nauczyciel")
+
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"]):
+        st.markdown(msg["content"])
+
+if prompt := st.chat_input("O co chcesz zapytać?"):
+    # Add user message to state
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    with st.chat_message("user"):
+        st.markdown(prompt)
+
+    # Generate response
+    with st.chat_message("assistant"):
+        with st.spinner("Myślę..."):
+            try:
+                # Prepare history (excluding the last user message which we send now)
+                chat_session = tutor_service.get_chat_session(
+                    st.session_state.messages[:-1]
+                )
+                response = tutor_service.send_message(chat_session, prompt)
+
+                st.markdown(response.text)
+                st.session_state.messages.append(
+                    {"role": "assistant", "content": response.text}
+                )
+            except Exception as e:
+                st.error(f"Błąd: {e}")
