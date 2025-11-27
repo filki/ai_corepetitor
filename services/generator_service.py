@@ -1,5 +1,6 @@
 import google.generativeai as genai
 import json
+from tools.calculator import calculate
 
 
 class GeneratorService:
@@ -28,7 +29,18 @@ class GeneratorService:
                 "hints": ["?"],
                 "difficulty": "?"
             }
+            NARZĘDZIA:
+            Masz dostęp do kalkulatora (calculate).
+            MUSISZ go użyć do obliczenia poprawnej odpowiedzi!
+
+            Przykład:
+            - Generujesz zadanie: "Ile to 17 × 23?"
+            - Wywołaj: calculate("17 * 23") → dostaniesz "391"
+            - Zapisz w "correct_answer": "391"
+
+            Zawsze używaj kalkulatora do weryfikacji obliczeń matematycznych!
             """,
+            tools=[calculate],
         )
 
     def generate_challenge(self, context: dict, category: str) -> dict:
