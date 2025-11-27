@@ -57,7 +57,12 @@ class GeneratorService:
             Zwróć odpowiedź w formacie JSON zgodnie z przykładem w instrukcji.
             """
 
-            response = self.model.generate_content(prompt)
+            response = self.model.generate_content(
+                prompt,
+                generation_config={
+                    "response_mime_type": "application/json"
+                },  # Wymusza JSON!
+            )
             if response.text.startswith("```json"):
                 return self._handle_markdown(response.text)
             else:
