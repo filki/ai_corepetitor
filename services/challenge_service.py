@@ -15,8 +15,12 @@ class ChallengeService:
     def generate_challenge(self, profile_id, category):
         # 1. Agent A
         context = self.context_agent.analyze_context(profile_id, category)
+        if context is None:
+            return None
         # 2. Agent B
         problem = self.generator.generate_challenge(context, category)
+        if problem is None:
+            return None
         # 3. Save to DB
         challenge_data = {
             "category": category,

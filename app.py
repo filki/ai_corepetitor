@@ -35,7 +35,11 @@ tutor_service = get_tutor_service(st.secrets["GOOGLE_API_KEY"])
 if "current_profile" not in st.session_state:
     st.header("👤 Kto dzisiaj się uczy?")
 
-    profiles = db_service.get_all_profiles().data
+    profiles_response = db_service.get_all_profiles()
+    if not profiles_response:
+        st.error("🚨 Nie udało się pobrać profili. Sprawdź połączenie z internetem.")
+        st.stop()
+    profiles = profiles_response.data
     cols = st.columns(len(profiles) + 1)
 
     for i, profile in enumerate(profiles):
@@ -52,8 +56,12 @@ if "current_profile" not in st.session_state:
             nick = st.text_input("Imię")
             level = st.selectbox("Poziom", ["podstawowka_1_3", "podstawowka_4_8"])
             if st.form_submit_button("Dodaj"):
-                db_service.create_profile(nick, level)
-                st.rerun()
+                result_profile = db_service.create_profile(nick, level)
+                if result_profile:
+                    st.success("Profil został dodany.")
+                    st.rerun()
+                else:
+                    st.error("Nie udało się dodać profilu.")
     st.stop()
 st.title("🧮 Generator Zadań")
 
@@ -97,6 +105,9 @@ if st.button("Generuj Zadanie"):
             challenge = challenge_service.generate_challenge(
                 st.session_state["current_profile"]["id"], category
             )
+            if challenge is None:
+                st.error("🔄 Generator się przeciążył. Spróbuj za chwilę!")
+                st.stop()
             st.session_state["current_challenge"] = challenge
             # Clear previous result if any
             if "submission_result" in st.session_state:
@@ -122,9 +133,11 @@ if "current_challenge" in st.session_state:
             st.session_state["submission_result"] = result
 
             # Refresh profile to update XP
-            st.session_state["current_profile"] = db_service.get_profile_by_id(
+            profile_response = db_service.get_profile_by_id(
                 st.session_state["current_profile"]["id"]
-            ).data[0]
+            )
+            if profile_response and profile_response.data:
+                st.session_state["current_profile"] = profile_response.data[0]
             st.rerun()
 
 # Display Result
