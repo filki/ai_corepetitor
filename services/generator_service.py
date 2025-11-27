@@ -83,7 +83,7 @@ Zwróć odpowiedź w formacie JSON.
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     tools=[self.tools],
-                    temperature=0.7,
+                    temperature=1.3,  # Zwiększona dla różnorodności zadań!
                 ),
             )
 
