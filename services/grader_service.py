@@ -51,22 +51,7 @@ class GraderService:
             "xp_earned": 10      // 10 za poprawną, 0 za błędną
             }
             """,
-            tools=[
-                {
-                    "name": calculate,
-                    "description": "Oblicza matematyczne wyrażenia",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "expression": {
-                                "type": "string",
-                                "description": "Wyrażenie matematyczne do obliczenia",
-                            }
-                        },
-                        "required": ["expression"],
-                    },
-                }
-            ],
+            tools=[calculate],
         )
 
     def grade_answer(self, problem_text: str, correct_answer: str, user_answer: str):
