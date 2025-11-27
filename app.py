@@ -138,8 +138,16 @@ if prompt := st.chat_input("O co chcesz zapytać?"):
         with st.spinner("Myślę..."):
             try:
                 # Prepare history (excluding the last user message which we send now)
+
+                if "current_challenge" in st.session_state:
+                    challenge_text = st.session_state["current_challenge"][
+                        "problem_text"
+                    ]
+                else:
+                    challenge_text = None
+
                 chat_session = tutor_service.get_chat_session(
-                    st.session_state.messages[:-1]
+                    st.session_state.messages[:-1], challenge_context=challenge_text
                 )
                 response = tutor_service.send_message(chat_session, prompt)
 
