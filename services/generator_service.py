@@ -1,6 +1,7 @@
-"""
-Generator Service using NEW Google GenAI SDK
-Supports function calling with calculator tool
+"""Generator service for creating math challenges using Google GenAI.
+
+This module uses the Google Generative AI SDK with function calling capabilities
+to generate contextually appropriate math challenges with verified answers.
 """
 
 from google import genai
@@ -26,7 +27,24 @@ calculator_function = {
 
 
 class GeneratorService:
+    """Service for generating math challenges using Google Generative AI.
+
+    Uses the Gemini model with function calling to generate challenges
+    and verify answers using an integrated calculator tool.
+
+    Attributes:
+        client: Google GenAI client instance.
+        model_name: Name of the Gemini model to use.
+        system_instruction: System prompt for the AI model.
+        tools: Function calling tools configuration.
+    """
+
     def __init__(self, api_key):
+        """Initializes the generator service with API credentials.
+
+        Args:
+            api_key (str): Google Generative AI API key.
+        """
         self.client = genai.Client(api_key=api_key)
         self.model_name = "gemini-2.5-flash"
 
@@ -62,6 +80,20 @@ Zwróć TYLKO czysty JSON (bez markdown):
         self.tools = types.Tool(function_declarations=[calculator_function])
 
     def generate_challenge(self, context: dict, category: str) -> dict:
+        """Generates a math challenge based on user context and category.
+
+        Uses the Gemini model to create an appropriate challenge, leveraging
+        the calculator tool for answer verification. Handles function calling
+        automatically.
+
+        Args:
+            context (dict): User context including level, history, and preferences.
+            category (str): Challenge category (e.g., 'Algebra', 'Geometry').
+
+        Returns:
+            dict: Challenge data with 'problem_text', 'correct_answer', 'hints',
+                  and 'difficulty', or None on error.
+        """
         try:
             prompt = f"""
 {self.system_instruction}

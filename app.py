@@ -4,6 +4,7 @@ from services.challenge_service import ChallengeService
 from services.db_service import DbService
 from services.tutor_service import TutorService
 from helpers.utils import reset_challenge
+import time
 
 # Site configuration (MUSI być pierwsza linijka!)
 st.set_page_config(page_title="Generator Zadań", page_icon="🧮")
@@ -100,20 +101,29 @@ category = st.selectbox("Wybierz kategorię:", ["Algebra", "Geometria", "Arytmet
 
 # Generate Button
 if st.button("Generuj Zadanie"):
-    with st.spinner("Generuję zadanie..."):
+    with st.status("🎲 Tworzę zadanie...", expanded=True) as status:
+        st.write("🔍 Analizuję poprzednie zadania...")
+        time.sleep(1)
+        st.write("🧠 Dopasowuję poziom...")
+        time.sleep(1)
+        st.write("✨ Generuję zadanie...")
+
         try:
             challenge = challenge_service.generate_challenge(
                 st.session_state["current_profile"]["id"], category
             )
-            if challenge is None:
+            if challenge:
+                st.session_state["current_challenge"] = challenge
+                # Clear previous result if any
+                if "submission_result" in st.session_state:
+                    del st.session_state["submission_result"]
+                status.update(label="✅ Gotowe!", state="complete")
+            else:
                 st.error("🔄 Generator się przeciążył. Spróbuj za chwilę!")
-                st.stop()
-            st.session_state["current_challenge"] = challenge
-            # Clear previous result if any
-            if "submission_result" in st.session_state:
-                del st.session_state["submission_result"]
+                status.update(label="❌ Błąd", state="error")
         except Exception as e:
-            st.error(f"Błąd generowania: {e}")
+            st.error(f"🔄 Generator się przeciążył. Spróbuj za chwilę!")
+            status.update(label="❌ Błąd", state="error")
 
 # Display Challenge
 if "current_challenge" in st.session_state:
@@ -139,7 +149,8 @@ if "current_challenge" in st.session_state:
             if profile_response and profile_response.data:
                 st.session_state["current_profile"] = profile_response.data[0]
             st.rerun()
-
+else:
+    st.info("👆 Wybierz kategorię i kliknij 'Generuj Zadanie'")
 # Display Result
 if "submission_result" in st.session_state:
     result = st.session_state["submission_result"]

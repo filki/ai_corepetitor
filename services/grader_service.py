@@ -1,6 +1,7 @@
-"""
-Simple Grader Service for MVP
-Validates user answers with basic fuzzy matching
+"""Grader service for evaluating student answers with fuzzy matching.
+
+This module uses Google Generative AI to intelligently grade mathematical answers,
+applying fuzzy matching and extracting intent from student responses.
 """
 
 import google.generativeai as genai
@@ -9,7 +10,17 @@ from tools.calculator import calculate
 
 
 class GraderService:
-    """Service for grading mathematical answers"""
+    """Service for grading mathematical answers with AI-powered fuzzy matching.
+
+    Uses Gemini to evaluate student answers by extracting mathematical intent
+    and comparing against the correct answer with tolerance for typos and
+    formatting differences.
+
+    Attributes:
+        XP_CORRECT: XP points awarded for correct answers.
+        XP_INCORRECT: XP points for incorrect answers (zero).
+        model: Configured Gemini model instance.
+    """
 
     XP_CORRECT = 10
     XP_INCORRECT = 0
@@ -57,6 +68,19 @@ class GraderService:
         )
 
     def grade_answer(self, problem_text: str, correct_answer: str, user_answer: str):
+        """Grades a user's answer against the correct answer.
+
+        Uses AI to perform fuzzy matching, extracting the mathematical value
+        from the user's response and comparing it to the correct answer.
+
+        Args:
+            problem_text (str): The original challenge question.
+            correct_answer (str): The verified correct answer.
+            user_answer (str): The user's submitted answer.
+
+        Returns:
+            tuple: (is_correct: bool, feedback: str, xp_earned: int)
+        """
         if not user_answer or not user_answer.strip():
             return (False, "Musisz wpisać odpowiedź! 🤔", self.XP_INCORRECT)
 

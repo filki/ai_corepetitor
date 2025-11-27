@@ -1,3 +1,8 @@
+"""Utility functions for the AI Tutor application.
+
+This module provides helper functions for image handling and session state management.
+"""
+
 import base64
 import re
 import os
@@ -5,9 +10,16 @@ import streamlit as st
 
 
 def replace_images_in_text(text: str) -> str:
-    """
-    Replaces local image paths (e.g. ![Alt](static/image.png)) with Base64 data URLs.
-    This allows Streamlit to display local images in Markdown.
+    """Replaces local image paths with Base64 data URLs for Streamlit display.
+
+    Searches for Markdown image syntax and converts local file paths from the 'static'
+    folder into Base64-encoded data URLs, allowing Streamlit to render them directly.
+
+    Args:
+        text (str): The input text containing Markdown image references.
+
+    Returns:
+        str: The text with local image paths replaced by Base64 data URLs.
     """
     if not text:
         return text
@@ -36,7 +48,18 @@ def replace_images_in_text(text: str) -> str:
 
 
 def reset_challenge():
-    """Czyści obecne zadanie i wynik"""
+    """Clears the current challenge and submission result from session state.
+
+    This function is typically called after completing a challenge when the user
+    clicks the "Next Challenge" button. It removes both the current challenge
+    and any submission results from Streamlit's session state.
+
+    Args:
+        None
+
+    Returns:
+        None
+    """
     if "current_challenge" in st.session_state:
         del st.session_state["current_challenge"]
     if "submission_result" in st.session_state:
