@@ -4,7 +4,10 @@ from google.api_core.exceptions import GoogleAPICallError, ResourceExhausted
 import time
 from tools.calculator import calculate
 from tools.geometry import draw_shape
+
 MAX_RETRIES = 3
+
+
 def retry_with_backoff(func):
     def wrapper(*args, **kwargs):
         attempt = 0
@@ -14,29 +17,39 @@ def retry_with_backoff(func):
                 return func(*args, **kwargs)
             except (GoogleAPICallError, ResourceExhausted, Exception) as e:
                 last_exception = e
-                delay = 2 ** attempt
-                
+                delay = 2**attempt
+
                 # Debug logging
                 if st.session_state.get("debug_mode"):
-                    st.error(f"DEBUG (Próba {attempt+1}/{MAX_RETRIES}): {type(e).__name__}: {e}")
-                
+                    st.error(
+                        f"DEBUG (Próba {attempt + 1}/{MAX_RETRIES}): {type(e).__name__}: {e}"
+                    )
+
                 # User-friendly messages
                 if isinstance(e, ResourceExhausted):
-                    print(f"Muszę chwilę odpocząć, bo aż mi się procesor zagrzał! 🌡️ Wracam za {delay} s...")
+                    print(
+                        f"Muszę chwilę odpocząć, bo aż mi się procesor zagrzał! 🌡️ Wracam za {delay} s..."
+                    )
                 elif isinstance(e, GoogleAPICallError):
-                    print(f"Coś mi się pomieszało w obliczeniach. Spróbuję jeszcze raz za {delay} s...")
+                    print(
+                        f"Coś mi się pomieszało w obliczeniach. Spróbuję jeszcze raz za {delay} s..."
+                    )
                 else:
                     print(f"Ups, mała awaria! Naprawiam i wracam za {delay} s...")
-                
+
                 time.sleep(delay)
                 attempt += 1
-        
-        final_error = "Uff, ale dużo liczenia! Muszę wziąć głęboki oddech. Spróbuj za moment ⏳"
-        if st.session_state.get("debug_mode") and last_exception:
-            final_error += f" (Ostatni błąd: {type(last_exception).__name__}: {last_exception})"
-        raise Exception(final_error)
-    return wrapper
 
+        final_error = (
+            "Uff, ale dużo liczenia! Muszę wziąć głęboki oddech. Spróbuj za moment ⏳"
+        )
+        if st.session_state.get("debug_mode") and last_exception:
+            final_error += (
+                f" (Ostatni błąd: {type(last_exception).__name__}: {last_exception})"
+            )
+        raise Exception(final_error)
+
+    return wrapper
 
 
 class TutorService:
@@ -73,18 +86,27 @@ class TutorService:
         self.model = genai.GenerativeModel(
             model_name=model_name,
             system_instruction=self.system_instruction,
-            tools=[calculate, draw_shape] 
+            tools=[calculate, draw_shape],
         )
-    def get_chat_session(self, st_messages):
+
+    def get_chat_session(self, st_messages, challenge_context=None):
         """Przygotowuje historię w formacie Gemini i zwraca sesję czatu."""
         gemini_history = []
+
         for msg in st_messages:
             role = "user" if msg["role"] == "user" else "model"
             # Gemini oczekuje listy 'parts', nawet dla samego tekstu
             gemini_history.append({"role": role, "parts": [msg["content"]]})
-        
-        return self.model.start_chat(history=gemini_history, enable_automatic_function_calling=True)
-    
+        if challenge_context:
+            system_msg = f"Kontekst: Uczeń pracuje nad zadaniem: {challenge_context}"
+            gemini_history.insert(0, {"role": "user", "parts": [system_msg]})
+            gemini_history.insert(
+                1, {"role": "model", "parts": ["Rozumiem, pomogę z tym zadaniem!"]}
+            )
+        return self.model.start_chat(
+            history=gemini_history, enable_automatic_function_calling=True
+        )
+
     @retry_with_backoff
     def send_message(self, chat_session, parts):
         # stream=True is not supported with enable_automatic_function_calling=True
