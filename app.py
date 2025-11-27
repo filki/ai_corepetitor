@@ -135,7 +135,10 @@ if st.button("Generuj Zadanie"):
                     st.error("🔄 Generator się przeciążył. Spróbuj za chwilę!")
                     status.update(label="❌ Błąd", state="error")
             except Exception as e:
-                st.error(f"🔄 Generator się przeciążył. Spróbuj za chwilę!")
+                st.error(f"❌ BŁĄD: {e}")
+                import traceback
+
+                st.code(traceback.format_exc())
                 status.update(label="❌ Błąd", state="error")
 
 # Display Challenge

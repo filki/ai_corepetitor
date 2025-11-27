@@ -5,7 +5,6 @@ including profile management, XP tracking, and submission history.
 """
 
 from supabase import create_client
-from dotenv import load_dotenv
 import os
 import streamlit as st
 
