@@ -132,8 +132,8 @@ if "current_challenge" in st.session_state:
     st.info(f"📝 Zadanie: {challenge['problem_text']}")
 
     # Answer Input
-    with st.form("answer_form"):
-        user_answer = st.text_input("Twoja odpowiedź:")
+    with st.form("answer_form", clear_on_submit=True):
+        user_answer = st.text_input("Twoja odpowiedź:", key="answer_input")
         submitted = st.form_submit_button("Sprawdź")
 
         if submitted:
@@ -164,43 +164,44 @@ if "submission_result" in st.session_state:
         st.error(f"{result['feedback']}")
 
 
-# --- Chat Interface ---
-st.subheader("💬 Wirtualny Nauczyciel")
+if "current_challenge" in st.session_state:
+    # --- Chat Interface ---
+    st.subheader("💬 Wirtualny Nauczyciel")
 
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
 
-for msg in st.session_state.messages:
-    with st.chat_message(msg["role"]):
-        st.markdown(msg["content"])
+    for msg in st.session_state.messages:
+        with st.chat_message(msg["role"]):
+            st.markdown(msg["content"])
 
-if prompt := st.chat_input("O co chcesz zapytać?"):
-    # Add user message to state
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
+    if prompt := st.chat_input("O co chcesz zapytać?"):
+        # Add user message to state
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user"):
+            st.markdown(prompt)
 
-    # Generate response
-    with st.chat_message("assistant"):
-        with st.spinner("Myślę..."):
-            try:
-                # Prepare history (excluding the last user message which we send now)
+        # Generate response
+        with st.chat_message("assistant"):
+            with st.spinner("Myślę..."):
+                try:
+                    # Prepare history (excluding the last user message which we send now)
 
-                if "current_challenge" in st.session_state:
-                    challenge_text = st.session_state["current_challenge"][
-                        "problem_text"
-                    ]
-                else:
-                    challenge_text = None
+                    if "current_challenge" in st.session_state:
+                        challenge_text = st.session_state["current_challenge"][
+                            "problem_text"
+                        ]
+                    else:
+                        challenge_text = None
 
-                chat_session = tutor_service.get_chat_session(
-                    st.session_state.messages[:-1], challenge_context=challenge_text
-                )
-                response = tutor_service.send_message(chat_session, prompt)
+                    chat_session = tutor_service.get_chat_session(
+                        st.session_state.messages[:-1], challenge_context=challenge_text
+                    )
+                    response = tutor_service.send_message(chat_session, prompt)
 
-                st.markdown(response.text)
-                st.session_state.messages.append(
-                    {"role": "assistant", "content": response.text}
-                )
-            except Exception as e:
-                st.error(f"Błąd: {e}")
+                    st.markdown(response.text)
+                    st.session_state.messages.append(
+                        {"role": "assistant", "content": response.text}
+                    )
+                except Exception as e:
+                    st.error(f"Błąd: {e}")
