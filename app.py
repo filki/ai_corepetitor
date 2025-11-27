@@ -3,6 +3,7 @@ from services.auth_service import AuthService
 from services.challenge_service import ChallengeService
 from services.db_service import DbService
 from services.tutor_service import TutorService
+from helpers.utils import reset_challenge
 
 # Site configuration (MUSI być pierwsza linijka!)
 st.set_page_config(page_title="Generator Zadań", page_icon="🧮")
@@ -119,8 +120,12 @@ if "submission_result" in st.session_state:
     if result["is_correct"]:
         st.success(f"{result['feedback']} (+{result['xp_earned']} XP)")
         st.balloons()
+        if st.button("Następne zadanie", type="primary"):
+            reset_challenge()
+            st.rerun()
     else:
         st.error(f"{result['feedback']}")
+
 
 # --- Chat Interface ---
 st.subheader("💬 Wirtualny Nauczyciel")
