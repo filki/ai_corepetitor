@@ -57,14 +57,14 @@ class ChallengeService:
         if problem is None:
             return None
         # 3. Save to DB
-        challenge_data = {
+        db_challenge = {
+            "profile_id": profile_id,
+            "problem_text": problem["problem_text"],
+            "correct_answer": problem["correct_answer"],
             "category": category,
-            "difficulty": problem.get("difficulty"),
-            "problem_text": problem.get("problem_text"),
-            "correct_answer": problem.get("correct_answer"),
-            "hints": problem.get("hints"),
+            "curriculum_topic_id": context.get("curriculum_topic", {}).get("id"),
         }
-        result = self.db.supabase.table("challenges").insert(challenge_data).execute()
+        result = self.db.supabase.table("challenges").insert(db_challenge).execute()
 
         return result.data[0]
 

@@ -144,3 +144,54 @@ class DbService:
             .eq("profile_id", profile_id)
             .execute()
         )
+
+    @safe_query
+    def match_curriculum_topics(
+        self,
+        query_embedding: list[float],
+        match_threshold: float = 0.7,
+        match_count: int = 5,
+        filter_grade_range: str = None,
+    ) -> list[dict] | None:
+        """Wyszukuje podobne tematy z curriculum używając vector similarity.
+
+        Args:
+            query_embedding: Wektor embeddingu query (768 wymiarów)
+            match_threshold: Minimalny poziom podobieństwa (0-1)
+            match_count: Ile wyników zwrócić
+            filter_grade_range: Opcjonalnie filtruj po "IV-VI" lub "VII-VIII"
+
+        Returns:
+            Lista słowników z pasującymi tematami lub None przy błędzie
+        """
+        response = self.supabase.rpc(
+            "match_curriculum_topics",
+            {
+                "query_embedding": query_embedding,
+                "match_threshold": match_threshold,
+                "match_count": match_count,
+                "filter_grade_range": filter_grade_range,
+            },
+        ).execute()
+
+        return response.data if response.data else None
+
+    @safe_query
+    def get_curriculum_topic_by_id(self, topic_id: int) -> dict | None:
+        """Pobiera temat curriculum po ID.
+
+        Args:
+            topic_id: ID tematu w tabeli curriculum_chunks
+
+        Returns:
+            Słownik z danymi tematu lub None
+        """
+        response = (
+            self.supabase.table("curriculum_chunks")
+            .select("*")
+            .eq("id", topic_id)
+            .single()
+            .execute()
+        )
+
+        return response.data if response.data else None
