@@ -1,80 +1,138 @@
-import google.generativeai as genai
+"""
+Generator Service using NEW Google GenAI SDK
+Supports function calling with calculator tool
+"""
+
+from google import genai
+from google.genai import types
 import json
-from tools.calculator import calculate
+
+
+# Define calculator function declaration for new SDK
+calculator_function = {
+    "name": "calculate",
+    "description": "Calculates mathematical expressions. Use this to verify all mathematical answers!",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "expression": {
+                "type": "string",
+                "description": "Mathematical expression to calculate (e.g., '17 * 23', '5 + 3')",
+            },
+        },
+        "required": ["expression"],
+    },
+}
 
 
 class GeneratorService:
     def __init__(self, api_key):
-        genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel(
-            model_name="gemini-2.5-flash",
-            system_instruction="""
-            Jesteś drugim agentem w szeregu orkiestracji. 
-            Twoim zadaniem jest wygenerowanie zadania na podstawie kontekstu.
+        self.client = genai.Client(api_key=api_key)
+        self.model_name = "gemini-2.5-flash"
 
-            Kontekst zawiera informacje o profilu ucznia, historii rozwiązania zadań i kategorii.
-            Przykład kontekstu:
-            {
-                "age_range": "10-14 lat",
-                "skill_level": "początkujący",
-                "recommended_difficulty": "easy",
-                "context_description": "Uczeń klasy 6, ma problemu z ułamkami."
-            }
-            Kontekst jest podawany w formacie JSON.
-            Odpowiedź zwróc jako JSON.
-            Przykład odpowiedzi:
-            {
-                "problem_text": "?",
-                "correct_answer": "?", 
-                "hints": ["?"],
-                "difficulty": "?"
-            }
-            NARZĘDZIA:
-            Masz dostęp do kalkulatora (calculate).
-            MUSISZ go użyć do obliczenia poprawnej odpowiedzi!
+        # System instruction
+        self.system_instruction = """
+Jesteś drugim agentem w szeregu orkiestracji. 
+Twoim zadaniem jest wygenerowanie zadania na podstawie kontekstu.
 
-            Przykład:
-            - Generujesz zadanie: "Ile to 17 × 23?"
-            - Wywołaj: calculate("17 * 23") → dostaniesz "391"
-            - Zapisz w "correct_answer": "391"
+Kontekst zawiera informacje o profilu ucznia, historii rozwiązania zadań i kategorii.
 
-            Zawsze używaj kalkulatora do weryfikacji obliczeń matematycznych!
-            """,
-            tools=[calculate],
-        )
+NARZĘDZIA:
+Masz dostęp do kalkulatora (calculate).
+MUSISZ go użyć do obliczenia poprawnej odpowiedzi!
+
+Przykład:
+- Generujesz zadanie: "Ile to 17 × 23?"
+- Wywołaj: calculate("17 * 23") → dostaniesz "391"
+- Zapisz w "correct_answer": "391"
+
+Zawsze używaj kalkulatora do weryfikacji obliczeń matematycznych!
+
+ODPOWIEDŹ:
+Zwróć TYLKO czysty JSON (bez markdown):
+{
+    "problem_text": "treść zadania",
+    "correct_answer": "odpowiedź (użyj kalkulatora!)",
+    "hints": ["wskazówka 1", "wskazówka 2"],
+    "difficulty": "easy/medium/hard"
+}
+"""
+
+        # Configure tools
+        self.tools = types.Tool(function_declarations=[calculator_function])
 
     def generate_challenge(self, context: dict, category: str) -> dict:
         try:
             prompt = f"""
-            Wygeneruj zadanie matematyczne.
-            
-            Kontekst ucznia:
-            {json.dumps(context, indent=2)}
-            
-            Kategoria: {category}
-            
-            Uwzględnij poziom ucznia i wygeneruj odpowiednie zadanie.
-            Zwróć odpowiedź w formacie JSON zgodnie z przykładem w instrukcji.
-            """
+{self.system_instruction}
 
-            response = self.model.generate_content(
-                prompt,
-                generation_config={
-                    "response_mime_type": "application/json"
-                },  # Wymusza JSON!
+Wygeneruj zadanie matematyczne.
+
+Kontekst ucznia:
+{json.dumps(context, indent=2, ensure_ascii=False)}
+
+Kategoria: {category}
+
+Uwzględnij poziom ucznia i wygeneruj odpowiednie zadanie.
+Zwróć odpowiedź w formacie JSON.
+"""
+
+            # Generate with function calling
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    tools=[self.tools],
+                    temperature=0.7,
+                ),
             )
-            if response.text.startswith("```json"):
-                return self._handle_markdown(response.text)
-            else:
-                return json.loads(response.text.strip())
-        except Exception as e:
-            print(f"Error handling JSON response: {e}")
-            return None
 
-    def _handle_markdown(self, response: str) -> dict:
-        response = response.replace("```json", "").replace("```", "").strip()
-        try:
-            return json.loads(response)
-        except json.JSONDecodeError as e:
-            print(f"Failed to parse JSON: {e}")
+            # Check if there's a function call
+            if response.candidates[0].content.parts[0].function_call:
+                # Manual function calling
+                from tools.calculator import calculate
+
+                function_call = response.candidates[0].content.parts[0].function_call
+                result = calculate(function_call.args["expression"])
+
+                # Send result back
+                response = self.client.models.generate_content(
+                    model=self.model_name,
+                    contents=[
+                        types.Content(role="user", parts=[types.Part(text=prompt)]),
+                        types.Content(
+                            role="model",
+                            parts=[response.candidates[0].content.parts[0]],
+                        ),
+                        types.Content(
+                            role="user",
+                            parts=[
+                                types.Part(
+                                    function_response=types.FunctionResponse(
+                                        name=function_call.name,
+                                        response={"result": result},
+                                    )
+                                )
+                            ],
+                        ),
+                    ],
+                    config=types.GenerateContentConfig(tools=[self.tools]),
+                )
+
+            # Parse response
+            text = response.text.strip()
+
+            # Handle markdown
+            if text.startswith("```json"):
+                text = text.replace("```json", "").replace("```", "").strip()
+            elif text.startswith("```"):
+                text = text.replace("```", "").strip()
+
+            return json.loads(text)
+
+        except Exception as e:
+            print(f"Error in Generator: {e}")
+            import traceback
+
+            traceback.print_exc()
             return None
