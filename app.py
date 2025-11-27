@@ -66,6 +66,19 @@ with st.sidebar:
     st.metric("Poziom", level)
     st.progress(progress / 100)
     st.caption(f"Poziom: {level} • {progress}/100 XP do następnego poziomu")
+    with st.expander("❓ Jak używać?"):
+        st.markdown("""
+    **Krok 1:** Wybierz kategorię (Algebra, Geometria, Arytmetyka)
+    
+    **Krok 2:** Kliknij "Generuj Zadanie"
+    
+    **Krok 3:** Wpisz odpowiedź i kliknij "Sprawdź"
+    
+    **Krok 4:** Jeśli poprawnie → "Następne zadanie" ➡️
+    
+    💬 **Potrzebujesz pomocy?** Zapytaj Wirtualnego Nauczyciela poniżej!
+    """)
+
     if st.button("Wyloguj / Zmień profil"):
         del st.session_state["current_profile"]
         st.rerun()
