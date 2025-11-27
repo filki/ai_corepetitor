@@ -18,7 +18,7 @@ class RagService:
             api_key: Google API key for Gemini
         """
         genai.configure(api_key=api_key)
-        self.model_name = "models/text-embedding-004"
+        self.model_name = "gemini-embedding-001"
         self.db_service = DbService()
 
     def find_relevant_topic(self, query: str, grade_range: str = None) -> dict | None:
