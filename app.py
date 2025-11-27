@@ -60,6 +60,11 @@ st.title("🧮 Generator Zadań")
 with st.sidebar:
     st.header(f"👤 {st.session_state['current_profile']['nickname']}")
     st.metric("XP", st.session_state["current_profile"]["total_xp"])
+    level = st.session_state["current_profile"]["total_xp"] // 100
+    progress = st.session_state["current_profile"]["total_xp"] % 100
+    st.metric("Poziom", level)
+    st.progress(progress / 100)
+    st.caption(f"Poziom: {level} • {progress}/100 XP do następnego poziomu")
     if st.button("Wyloguj / Zmień profil"):
         del st.session_state["current_profile"]
         st.rerun()
