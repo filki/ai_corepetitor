@@ -4,3 +4,4 @@ numexpr
 matplotlib
 supabase
 python-dotenv
+google-genai>=1.0.0
