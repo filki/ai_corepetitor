@@ -53,7 +53,7 @@ class GraderService:
             """,
             tools=[
                 {
-                    "name": "calculator",
+                    "name": calculate,
                     "description": "Oblicza matematyczne wyrażenia",
                     "parameters": {
                         "type": "object",
