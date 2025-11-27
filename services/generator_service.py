@@ -46,7 +46,7 @@ class GeneratorService:
             api_key (str): Google Generative AI API key.
         """
         self.client = genai.Client(api_key=api_key)
-        self.model_name = "gemini-2.5-flash"
+        self.model_name = "gemini-2.5-pro"
 
         # System instruction
         self.system_instruction = """

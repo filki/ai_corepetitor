@@ -5,6 +5,7 @@ from services.db_service import DbService
 from services.tutor_service import TutorService
 from helpers.utils import reset_challenge
 import time
+from services.rag_service import RagService
 
 # Site configuration (MUSI być pierwsza linijka!)
 st.set_page_config(page_title="Generator Zadań", page_icon="🧮")
@@ -29,9 +30,15 @@ def get_tutor_service(api_key):
     return TutorService(api_key)
 
 
+@st.cache_resource
+def get_rag_service(api_key):
+    return RagService(api_key)
+
+
 challenge_service = get_challenge_service(st.secrets["GOOGLE_API_KEY"])
 db_service = get_db_service()
 tutor_service = get_tutor_service(st.secrets["GOOGLE_API_KEY"])
+rag_service = get_rag_service(st.secrets["GOOGLE_API_KEY"])
 
 if "current_profile" not in st.session_state:
     st.header("👤 Kto dzisiaj się uczy?")
@@ -96,39 +103,47 @@ with st.sidebar:
 st.divider()
 st.header("🎯 Tryb Treningowy")
 
-# Category Selector
-category = st.selectbox("Wybierz kategorię:", ["Algebra", "Geometria", "Arytmetyka"])
+st.subheader("📝 O czym chcesz się uczyć?")
+user_query = st.text_input(
+    "Opisz z czym masz problem lub co chcesz ćwiczyć:",
+    placeholder="np. dodawanie ułamków zwykłych, pole trójkąta...",
+)
 
 # Generate Button
 if st.button("Generuj Zadanie"):
-    with st.status("🎲 Tworzę zadanie...", expanded=True) as status:
-        st.write("🔍 Analizuję poprzednie zadania...")
-        time.sleep(1)
-        st.write("🧠 Dopasowuję poziom...")
-        time.sleep(1)
-        st.write("✨ Generuję zadanie...")
+    if not user_query:
+        st.warning("⚠️ Wpisz najpierw czego chcesz się uczyć!")
+    else:
+        with st.status("🎲 Tworzę zadanie...", expanded=True) as status:
+            st.write("🔍 Analizuję poprzednie zadania...")
+            time.sleep(1)
+            st.write("🧠 Dopasowuję poziom...")
+            time.sleep(1)
+            st.write("✨ Generuję zadanie...")
 
-        try:
-            challenge = challenge_service.generate_challenge(
-                st.session_state["current_profile"]["id"], category
-            )
-            if challenge:
-                st.session_state["current_challenge"] = challenge
-                # Clear previous result if any
-                if "submission_result" in st.session_state:
-                    del st.session_state["submission_result"]
-                status.update(label="✅ Gotowe!", state="complete")
-            else:
-                st.error("🔄 Generator się przeciążył. Spróbuj za chwilę!")
+            try:
+                challenge = challenge_service.generate_challenge(
+                    st.session_state["current_profile"]["id"], user_query
+                )
+                if challenge:
+                    st.session_state["current_challenge"] = challenge
+                    # Clear previous result if any
+                    if "submission_result" in st.session_state:
+                        del st.session_state["submission_result"]
+                    status.update(label="✅ Gotowe!", state="complete")
+                else:
+                    st.error("🔄 Generator się przeciążył. Spróbuj za chwilę!")
+                    status.update(label="❌ Błąd", state="error")
+            except Exception as e:
+                st.error(f"🔄 Generator się przeciążył. Spróbuj za chwilę!")
                 status.update(label="❌ Błąd", state="error")
-        except Exception as e:
-            st.error(f"🔄 Generator się przeciążył. Spróbuj za chwilę!")
-            status.update(label="❌ Błąd", state="error")
 
 # Display Challenge
 if "current_challenge" in st.session_state:
     challenge = st.session_state["current_challenge"]
-
+    if challenge.get("curriculum_topic_id"):
+        topic = rag_service.get_topic_by_id(challenge["curriculum_topic_id"])
+        st.caption(f"📚 {topic['topic_name']} (klasy {topic['grade_range']})")
     st.info(f"📝 Zadanie: {challenge['problem_text']}")
 
     # Answer Input

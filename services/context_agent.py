@@ -1,6 +1,7 @@
 import google.generativeai as genai
 from services.db_service import DbService
 import json
+from services.rag_service import RagService
 
 
 class ContextAgent:
@@ -41,6 +42,7 @@ class ContextAgent:
             """,
         )
         self.db_service = DbService()
+        self.rag_service = RagService(api_key)
 
     def analyze_context(self, profile_id: int, category: str) -> dict:
         profile = self.db_service.get_profile_by_id(profile_id)
@@ -63,10 +65,23 @@ class ContextAgent:
         """
         try:
             response = self.model.generate_content(prompt)
+
+            # Parse JSON response
             if response.text.startswith("```json"):
-                return self._handle_markdown(response.text)
+                context = self._handle_markdown(response.text)
             else:
-                return json.loads(response.text.strip())
+                context = json.loads(response.text.strip())
+
+            # Add curriculum topic using RAG
+            if context:
+                grade_range = self._get_grade_range(profile_data.get("education_level"))
+                curriculum_topic = self.rag_service.find_relevant_topic(
+                    query=f"{category} zadania matematyka", grade_range=grade_range
+                )
+                context["curriculum_topic"] = curriculum_topic
+
+            return context
+
         except Exception as e:
             print(f"Error handling JSON response: {e}")
             return None
@@ -87,3 +102,10 @@ class ContextAgent:
             "context_description",
         ]
         return all(key in context for key in required)
+
+    def _get_grade_range(self, education_level: str) -> str:
+        if "4" in education_level or "5" in education_level or "6" in education_level:
+            return "IV-VI"
+        elif "7" in education_level or "8" in education_level:
+            return "VII-VIII"
+        return None
