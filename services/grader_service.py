@@ -36,11 +36,13 @@ class GraderService:
             - Akceptuj zamienne formaty (np. 0.5 = 1/2 = 50%).
             Krok 4: Porównaj wyekstrahowaną wartość z poprawnym wynikiem.
 
-            ZASADY FEEDBACKU (w polu "feedback"):
-            - Język: Polski.
-            - Jeśli POPRAWNA: Bądź entuzjastyczny, użyj emoji (🎉, 🚀, ⭐). Pochwal myślenie.
-            - Jeśli BŁĘDNA: Bądź wspierający. Nie podawaj od razu poprawnego wyniku. Daj delikatną wskazówkę, która naprowadzi ucznia na błąd (np. "Jesteś blisko, ale sprawdź jeszcze raz dodawanie").
-
+            ZASADY FEEDBACKU:
+            - Jeśli POPRAWNA: Entuzjastyczny z emoji (🎉, 🚀, ⭐). Przykład: "Brawo! Świetna robota! 🎉"
+            - Jeśli BŁĘDNA: Krótki komunikat bez wyjaśnień. Przykłady:
+            * "Nie tym razem! Spróbuj jeszcze raz! 💪"
+            * "Blisko, ale nie do końca! Spróbuj ponownie! 🤔"
+            * "Ups, to nie ta odpowiedź. Może Wirtualny Nauczyciel Ci pomoże? 💬"
+            - NIE naprowadzaj, NIE wyjaśniaj - to rola Wirtualnego Nauczyciela (czat)!
             FORMAT ODPOWIEDZI:
             Musisz zwrócić TYLKO obiekt JSON. Nie dodawaj żadnego tekstu przed ani po JSONie.
 
