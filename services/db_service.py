@@ -148,7 +148,7 @@ class DbService:
     def match_curriculum_topics(
         self,
         query_embedding: list[float],
-        match_threshold: float = 0.7,
+        match_threshold: float = 0.5,  # Obniżony z 0.7 do 0.5 (50%)
         match_count: int = 5,
         filter_grade_range: str = None,
     ) -> list[dict] | None:
