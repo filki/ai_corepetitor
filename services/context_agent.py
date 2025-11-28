@@ -78,7 +78,8 @@ Twoim celem jest utrzymanie ucznia w strefie najbliższego rozwoju (Vygotsky Zon
             if context:
                 grade_range = self._get_grade_range(profile_data.get("education_level"))
                 curriculum_topic = self.rag_service.find_relevant_topic(
-                    query=f"{category} zadania matematyka", grade_range=grade_range
+                    query=category,  # Pure query bez szumu!
+                    grade_range=grade_range,
                 )
                 context["curriculum_topic"] = curriculum_topic
 
@@ -90,10 +91,19 @@ Twoim celem jest utrzymanie ucznia w strefie najbliższego rozwoju (Vygotsky Zon
 
     def _get_grade_range(self, education_level: str) -> str:
         """Konwertuje education_level na grade_range."""
+        print(f"🎓 DEBUG education_level: '{education_level}'")
+
         if not education_level:
-            return None
-        if any(c in education_level for c in ["4", "5", "6"]):
+            return "IV-VI"  # Default fallback
+
+        # Obsługa różnych formatów
+        if any(
+            x in str(education_level).lower() for x in ["1", "2", "3", "podstawówka"]
+        ):
+            return "IV-VI"  # Klasy 1-3 -> przypisz IV-VI (łatwiejsze)
+        if any(c in str(education_level) for c in ["4", "5", "6"]):
             return "IV-VI"
-        elif any(c in education_level for c in ["7", "8"]):
+        elif any(c in str(education_level) for c in ["7", "8"]):
             return "VII-VIII"
-        return None
+
+        return "IV-VI"  # Default fallback

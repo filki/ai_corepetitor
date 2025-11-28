@@ -20,12 +20,19 @@ class ChallengeService:
         if problem is None:
             return None
 
+        # Safe access to curriculum_topic_id
+        curriculum_topic_id = None
+        if context and isinstance(context, dict):
+            curriculum_topic = context.get("curriculum_topic")
+            if curriculum_topic and isinstance(curriculum_topic, dict):
+                curriculum_topic_id = curriculum_topic.get("id")
+
         db_challenge = {
             "profile_id": profile_id,
             "problem_text": problem["problem_text"],
             "correct_answer": problem["correct_answer"],
             "category": category,
-            "curriculum_topic_id": context.get("curriculum_topic", {}).get("id"),
+            "curriculum_topic_id": curriculum_topic_id,
         }
 
         result = self.db.supabase.table("challenges").insert(db_challenge).execute()
